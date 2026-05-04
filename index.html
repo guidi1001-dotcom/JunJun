@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サイズ診断 v8</title>
+<title>Fit Finder 完全版</title>
 
 <style>
-body {
-  font-family: sans-serif;
+body{
+  font-family:sans-serif;
   background:#111;
   color:#fff;
   padding:20px;
 }
-select, input, button {
+select,input,button{
   width:100%;
   margin:10px 0;
   padding:10px;
   font-size:16px;
 }
-.result {
+.result{
   margin-top:20px;
   padding:15px;
   background:#222;
@@ -28,10 +28,39 @@ select, input, button {
 
 <body>
 
-<h2>パンツサイズ診断</h2>
+<h2>サイズ診断ツール</h2>
+
+<label>カテゴリ</label>
+<select id="category" onchange="toggleCategory()">
+  <option value="tops">上着</option>
+  <option value="pants">パンツ</option>
+</select>
 
 <label>身長(cm)</label>
 <input type="number" id="height" value="177">
+
+<!-- ================= 上着 ================= -->
+<div id="topsArea">
+
+<label>シルエット</label>
+<select id="tops_silhouette">
+  <option value="tight">タイト</option>
+  <option value="normal" selected>普通</option>
+  <option value="big">ビッグ</option>
+</select>
+
+<label>素材</label>
+<select id="material">
+  <option value="normal">通常（±0）</option>
+  <option value="denim">デニム（+1）</option>
+  <option value="duck">ダック（+2）</option>
+  <option value="nylon">ナイロン（-1）</option>
+</select>
+
+</div>
+
+<!-- ================= パンツ ================= -->
+<div id="pantsArea" style="display:none">
 
 <label>股上</label>
 <select id="rise">
@@ -55,35 +84,113 @@ select, input, button {
   <option value="long" selected>長め</option>
 </select>
 
-<button onclick="calc()">診断する</button>
+</div>
+
+<button onclick="diagnose()">診断する</button>
 
 <div class="result" id="result"></div>
 
+<hr>
+
+<h3>実測入力（学習）</h3>
+<input type="number" id="realInseam" placeholder="実際の股下（例：78）">
+<button onclick="learn()">学習する</button>
+
 <script>
-function calc(){
 
-  let height = Number(document.getElementById('height').value);
-  let rise = document.getElementById('rise').value;
-  let hem = document.getElementById('hem').value;
-  let leg = document.getElementById('leg').value;
-
-  let inseam = (height - 28) * 0.5;
-
-  if(rise === 'high') inseam -= 2;
-  if(rise === 'low') inseam += 2;
-
-  if(hem === 'ankle') inseam -= 3;
-  if(hem === 'shoe') inseam += 2;
-  if(hem === 'stack') inseam += 4;
-
-  if(leg === 'long') inseam += 2.5;
-  if(leg === 'short') inseam -= 2;
-
-  inseam = Math.round(inseam);
-
-  document.getElementById('result').innerHTML =
-    "おすすめ股下：" + inseam + " cm";
+function toggleCategory(){
+  const cat = document.getElementById("category").value;
+  document.getElementById("topsArea").style.display = cat==="tops" ? "block":"none";
+  document.getElementById("pantsArea").style.display = cat==="pants" ? "block":"none";
 }
+
+function getLearning(){
+  let data = JSON.parse(localStorage.getItem("fit_learning")||"[]");
+  if(data.length===0) return 0;
+  return data.reduce((a,b)=>a+b,0)/data.length;
+}
+
+let lastResult = 0;
+
+function diagnose(){
+
+  const height = Number(document.getElementById("height").value);
+  const cat = document.getElementById("category").value;
+
+  let result = 0;
+  let log = [];
+
+  if(cat==="tops"){
+
+    let width = 54 + (height-170)*0.2;
+
+    const sil = document.getElementById("tops_silhouette").value;
+    if(sil==="tight"){ width -=2; log.push("タイト -2"); }
+    if(sil==="big"){ width +=4; log.push("ビッグ +4"); }
+
+    const mat = document.getElementById("material").value;
+    if(mat==="denim"){ width +=1; log.push("デニム +1"); }
+    if(mat==="duck"){ width +=2; log.push("ダック +2"); }
+    if(mat==="nylon"){ width -=1; log.push("ナイロン -1"); }
+
+    result = Math.round(width);
+
+    document.getElementById("result").innerHTML =
+      "おすすめ身幅："+result+"cm<br><br>"+log.join("<br>");
+
+  }
+
+  if(cat==="pants"){
+
+    let inseam = (height - 28) * 0.5;
+
+    const rise = document.getElementById("rise").value;
+    if(rise==="high"){ inseam -=1; log.push("ハイライズ -1"); }
+    if(rise==="low"){ inseam +=1; log.push("ローライズ +1"); }
+
+    const hem = document.getElementById("hem").value;
+    if(hem==="ankle"){ inseam -=3; log.push("くるぶし -3"); }
+    if(hem==="shoe"){ inseam +=2; log.push("靴乗り +2"); }
+    if(hem==="stack"){ inseam +=4; log.push("溜める +4"); }
+
+    const leg = document.getElementById("leg").value;
+    if(leg==="long"){ inseam +=2; log.push("脚長 +2"); }
+    if(leg==="short"){ inseam -=2; log.push("脚短 -2"); }
+
+    // 学習補正
+    let learn = getLearning();
+    if(learn !== 0){
+      inseam += learn;
+      log.push("学習補正 "+learn.toFixed(1));
+    }
+
+    result = Math.round(inseam);
+
+    document.getElementById("result").innerHTML =
+      "おすすめ股下："+result+"cm<br><br>"+log.join("<br>");
+
+  }
+
+  lastResult = result;
+}
+
+function learn(){
+
+  let real = Number(document.getElementById("realInseam").value);
+  if(!real || !lastResult) return;
+
+  let diff = real - lastResult;
+
+  let data = JSON.parse(localStorage.getItem("fit_learning")||"[]");
+
+  data.push(diff);
+  if(data.length>5) data.shift();
+
+  localStorage.setItem("fit_learning",JSON.stringify(data));
+
+  alert("学習しました（補正："+diff+"cm）");
+}
+
 </script>
 
 </body>
