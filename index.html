@@ -10,9 +10,11 @@
 
 :root{
 --black:#0a0a0a;
---white:#fafafa;
+--white:#ffffff;
 --g100:#f4f4f4;
 --g200:#e8e8e8;
+--g400:#aaaaaa;
+--radius:14px;
 }
 
 body{
@@ -28,17 +30,26 @@ padding:40px 20px;
 text-align:center;
 }
 
+header h1{
+font-size:28px;
+}
+
 .wrap{
-max-width:500px;
+max-width:520px;
 margin:auto;
 padding:16px;
 }
 
 .section{
-background:white;
+background:var(--white);
+border-radius:var(--radius);
 padding:20px;
-border-radius:12px;
 margin-top:16px;
+}
+
+.form-row{
+display:flex;
+gap:10px;
 }
 
 input{
@@ -47,18 +58,52 @@ height:45px;
 border:1px solid var(--g200);
 border-radius:8px;
 padding:0 10px;
+}
+
+label{
+font-size:12px;
+color:var(--g400);
 margin-top:10px;
+display:block;
+}
+
+.category{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+.cat-btn{
+flex:1;
+padding:20px;
+border-radius:12px;
+border:1px solid var(--g200);
+background:#eee;
+text-align:center;
+cursor:pointer;
+}
+
+.cat-btn.active{
+background:black;
+color:white;
 }
 
 button{
 width:100%;
-height:50px;
+height:52px;
 background:black;
 color:white;
 border:none;
-border-radius:8px;
+border-radius:10px;
 margin-top:20px;
 font-weight:bold;
+}
+
+.result{
+margin-top:20px;
+padding:15px;
+background:white;
+border-radius:10px;
 }
 </style>
 </head>
@@ -67,36 +112,108 @@ font-weight:bold;
 
 <header>
 <h1>服のサイズ診断</h1>
+<p>Fit Finder</p>
 </header>
 
 <div class="wrap">
 
 <div class="section">
+
+<div class="form-row">
+<div style="flex:1">
 <label>身長 (cm)</label>
-<input type="number" id="h">
+<input type="number" id="height" placeholder="170">
+</div>
 
+<div style="flex:1">
 <label>体重 (kg)</label>
-<input type="number" id="w">
+<input type="number" id="weight" placeholder="60">
+</div>
+</div>
 
-<button onclick="run()">診断する</button>
+<label>性別</label>
+<select id="gender">
+<option value="male">男性</option>
+<option value="female">女性</option>
+</select>
 
-<p id="r" style="margin-top:15px;"></p>
+<label>カテゴリ</label>
+<div class="category">
+<div class="cat-btn active" onclick="setCat('tops')" id="topsBtn">上着</div>
+<div class="cat-btn" onclick="setCat('bottoms')" id="bottomsBtn">ボトム</div>
+</div>
+
+<button onclick="diagnose()">診断する</button>
+
+<div class="result" id="result" style="display:none"></div>
+
 </div>
 
 </div>
 
 <script>
-function run(){
-let h=document.getElementById('h').value
-let w=document.getElementById('w').value
+let category="tops"
+
+function setCat(c){
+category=c
+document.getElementById('topsBtn').classList.remove('active')
+document.getElementById('bottomsBtn').classList.remove('active')
+
+if(c==="tops"){
+document.getElementById('topsBtn').classList.add('active')
+}else{
+document.getElementById('bottomsBtn').classList.add('active')
+}
+}
+
+function diagnose(){
+
+let h=parseFloat(document.getElementById('height').value)
+let w=parseFloat(document.getElementById('weight').value)
+let gender=document.getElementById('gender').value
 
 if(!h||!w){
-alert('入力してください')
+alert("入力してください")
 return
 }
 
+let result=""
+
+if(category==="tops"){
+
 let width=54+(w-60)*0.4
-document.getElementById('r').innerText='推奨身幅：約 '+Math.round(width)+'cm'
+let shoulder=width*0.8
+let length=72+(h-170)*0.3
+
+if(gender==="female"){
+width-=1
+shoulder-=1
+}
+
+result=`
+<strong>トップス推奨サイズ</strong><br><br>
+身幅：${Math.round(width)}cm<br>
+肩幅：${Math.round(shoulder)}cm<br>
+着丈：${Math.round(length)}cm
+`
+
+}else{
+
+let waist=(w*0.45)+10
+let inseam=(h-27)*0.5
+
+result=`
+<strong>ボトム推奨サイズ</strong><br><br>
+ウエスト：${Math.round(waist)}cm<br>
+股下：${Math.round(inseam)}cm
+`
+
+}
+
+let box=document.getElementById('result')
+box.style.display="block"
+box.innerHTML=result
+
 }
 </script>
 
