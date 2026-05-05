@@ -1,1 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服のサイズ診断 — Fit Finder</title>
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* RESET */
+*, *::before, ::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root {
+  --black:#0a0a0a;
+  --white:#fafafa;
+  --g100:#f4f4f4;
+  --g200:#e8e8e8;
+  --g400:#aaaaaa;
+  --radius:14px;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--g100);
+  color:var(--black);
+}
+
+/ HEADER /
+header{
+  background:var(--black);
+  color:var(--white);
+  text-align:center;
+  padding:40px 20px;
+}
+
+header h1{
+  font-family:'DM Serif Display',serif;
+  font-size:28px;
+}
+
+/ WRAP /
+.wrap{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+
+/ CARD /
+.section{
+  background:var(--white);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-top:20px;
+}
+
+/ INPUT /
+.field{
+  margin-bottom:12px;
+}
+
+label{
+  font-size:12px;
+  color:var(--g400);
+}
+
+input{
+  width:100%;
+  height:46px;
+  border:1px solid var(--g200);
+  border-radius:10px;
+  padding:0 10px;
+}
+
+/ BUTTON /
+.btn{
+  width:100%;
+  height:50px;
+  background:var(--black);
+  color:var(--white);
+  border:none;
+  border-radius:10px;
+  margin-top:20px;
+  font-weight:600;
+}
+
+/ RESULT */
+.result{
+  display:none;
+  margin-top:20px;
+  padding:20px;
+  background:var(--white);
+  border-radius:var(--radius);
+}
+
+.result.show{
+  display:block;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Fit Finder</h1>
+  <p style="font-size:12px;opacity:0.6;">服のサイズ診断ツール</p>
+</header>
+
+<div class="wrap">
+
+<div class="section">
+
+  <div class="field">
+    <label>身長 (cm)</label>
+    <input type="number" id="height" placeholder="170">
+  </div>
+
+  <div class="field">
+    <label>体重 (kg)</label>
+    <input type="number" id="weight" placeholder="60">
+  </div>
+
+  <button class="btn" onclick="diagnose()">診断する</button>
+
+</div>
+
+<div class="result" id="result">
+
+  <h3>診断結果</h3>
+  <p>肩幅：<span id="shoulder"></span> cm</p>
+  <p>身幅：<span id="width"></span> cm</p>
+  <p>着丈：<span id="length"></span> cm</p>
+
+</div>
+
+</div>
+
+<script>
+
+function diagnose(){
+
+  const h = parseFloat(document.getElementById('height').value);
+  const w = parseFloat(document.getElementById('weight').value);
+
+  if(isNaN(h) || isNaN(w)){
+    alert('入力してください');
+    return;
+  }
+
+  let width = 54 + (w - 60) * 0.4;
+  let shoulder = width * 0.8;
+  let length = 72 + (h - 170) * 0.3;
+
+  document.getElementById('width').textContent = Math.round(width);
+  document.getElementById('shoulder').textContent = Math.round(shoulder);
+  document.getElementById('length').textContent = Math.round(length);
+
+  document.getElementById('result').classList.add('show');
+
+}
+
+</script>
+
+</body>
+</html>
