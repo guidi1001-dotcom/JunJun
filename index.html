@@ -3,85 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>服のサイズ診断 — Fit Finder</title>
+<title>服のサイズ診断</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
 
-/* RESET */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* ここが修正ポイント（-- に統一） */
-:root {
---black:    #0a0a0a;
---white:    #fafafa;
---g100:     #f4f4f4;
---g200:     #e8e8e8;
---g300:     #d0d0d0;
---g400:     #aaaaaa;
---g600:     #666666;
---green:    #1a7a4a;
---green-bg: #e8f7ef;
---blue:     #1a4a8a;
---blue-bg:  #e8eef7;
---red:      #9a2020;
---red-bg:   #f7e8e8;
---radius:   14px;
---radius-sm:9px;
---shadow:   0 2px 16px rgba(0,0,0,0.07);
---trans:    0.22s ease;
---sticky-h: 80px;
+:root{
+--black:#0a0a0a;
+--white:#fafafa;
+--g100:#f4f4f4;
+--g200:#e8e8e8;
 }
 
-body {
-font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-background: var(--g100);
-color: var(--black);
-min-height: 100vh;
+body{
+font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+background:var(--g100);
+color:var(--black);
 }
 
-/* ヘッダー */
-header {
-background: var(--black);
-color: var(--white);
-padding: 40px 20px;
-text-align: center;
+header{
+background:var(--black);
+color:var(--white);
+padding:40px 20px;
+text-align:center;
 }
 
-header h1 {
-font-family: 'DM Serif Display', serif;
-font-size: 28px;
+.wrap{
+max-width:500px;
+margin:auto;
+padding:16px;
 }
 
-/* フォーム */
-.wrap { max-width: 500px; margin: auto; padding: 16px; }
-
-.section {
-background: var(--white);
-padding: 20px;
-border-radius: 12px;
-margin-top: 16px;
-box-shadow: var(--shadow);
+.section{
+background:white;
+padding:20px;
+border-radius:12px;
+margin-top:16px;
 }
 
-input {
-width: 100%;
-height: 45px;
-border: 1px solid var(--g200);
-border-radius: 8px;
-padding: 0 10px;
-margin-top: 8px;
+input{
+width:100%;
+height:45px;
+border:1px solid var(--g200);
+border-radius:8px;
+padding:0 10px;
+margin-top:10px;
 }
 
-button {
-width: 100%;
-height: 50px;
-background: var(--black);
-color: white;
-border: none;
-border-radius: 8px;
-margin-top: 20px;
-font-weight: bold;
+button{
+width:100%;
+height:50px;
+background:black;
+color:white;
+border:none;
+border-radius:8px;
+margin-top:20px;
+font-weight:bold;
 }
 </style>
 </head>
@@ -90,39 +67,36 @@ font-weight: bold;
 
 <header>
 <h1>服のサイズ診断</h1>
-<p>シンプル版（修正版）</p>
 </header>
 
 <div class="wrap">
 
 <div class="section">
 <label>身長 (cm)</label>
-<input type="number" id="height">
+<input type="number" id="h">
 
 <label>体重 (kg)</label>
-<input type="number" id="weight">
+<input type="number" id="w">
 
-<button onclick="diagnose()">診断する</button>
+<button onclick="run()">診断する</button>
 
-<p id="result" style="margin-top:15px;"></p>
+<p id="r" style="margin-top:15px;"></p>
 </div>
 
 </div>
 
 <script>
-function diagnose() {
-  const h = parseFloat(document.getElementById('height').value);
-  const w = parseFloat(document.getElementById('weight').value);
+function run(){
+let h=document.getElementById('h').value
+let w=document.getElementById('w').value
 
-  if (!h || !w) {
-    alert('入力してください');
-    return;
-  }
+if(!h||!w){
+alert('入力してください')
+return
+}
 
-  const width = 54 + (w - 60) * 0.4;
-  const result = `推奨身幅：約 ${Math.round(width)} cm`;
-
-  document.getElementById('result').textContent = result;
+let width=54+(w-60)*0.4
+document.getElementById('r').innerText='推奨身幅：約 '+Math.round(width)+'cm'
 }
 </script>
 
