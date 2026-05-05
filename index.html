@@ -56,6 +56,8 @@ header h1{
 
 font-size:28px;
 
+margin-bottom:5px;
+
 }
 
 .wrap{
@@ -88,7 +90,7 @@ gap:10px;
 
 }
 
-input{
+input,select{
 
 width:100%;
 
@@ -179,6 +181,8 @@ padding:15px;
 background:white;
 
 border-radius:10px;
+
+line-height:1.6;
 
 }
 
@@ -294,9 +298,21 @@ if(category==="tops"){
 
 let width=54+(w-60)*0.4
 
-let shoulder=width*0.8
+let shoulder=width*0.8+1
 
-let length=72+(h-170)*0.3
+let length=72+(h-170)*0.35
+
+let sleeve=60+(h-170)*0.3
+
+let yuki=sleeve+(shoulder/2)
+
+if(yuki<85){
+
+sleeve+=1.5
+
+yuki=sleeve+(shoulder/2)
+
+}
 
 if(gender==="female"){
 
@@ -308,13 +324,17 @@ shoulder-=1
 
 result=`
 
-<strong>トップス推奨サイズ</strong><br><br>
+トップス推奨サイズ
 
-身幅：${Math.round(width)}cm<br>
+肩幅：${Math.round(shoulder)}cm
 
-肩幅：${Math.round(shoulder)}cm<br>
+身幅：${Math.round(width)}cm
 
 着丈：${Math.round(length)}cm
+
+袖丈：${Math.round(sleeve)}cm
+
+裄丈：${Math.round(yuki)}cm
 
 `
 
@@ -326,9 +346,9 @@ let inseam=(h-27)*0.5
 
 result=`
 
-<strong>ボトム推奨サイズ</strong><br><br>
+ボトム推奨サイズ
 
-ウエスト：${Math.round(waist)}cm<br>
+ウエスト：${Math.round(waist)}cm
 
 股下：${Math.round(inseam)}cm
 
@@ -340,7 +360,7 @@ let box=document.getElementById('result')
 
 box.style.display="block"
 
-box.innerHTML=result
+box.innerText=result
 
 }
 
