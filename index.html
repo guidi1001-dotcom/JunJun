@@ -306,8 +306,6 @@ let sleeve=60+(h-170)*0.3
 
 let yuki=sleeve+(shoulder/2)
 
-// 裄丈補正
-
 if(yuki<85){
 
 sleeve+=1.5
@@ -324,21 +322,17 @@ shoulder-=1
 
 }
 
-result=`
+result = "<strong>トップス推奨サイズ</strong><br><br>"
 
-<strong>トップス推奨サイズ</strong><br><br>
+       + "肩幅：" + Math.round(shoulder) + "cm<br>"
 
-肩幅：${Math.round(shoulder)}cm<br>
+       + "身幅：" + Math.round(width) + "cm<br>"
 
-身幅：${Math.round(width)}cm<br>
+       + "着丈：" + Math.round(length) + "cm<br>"
 
-着丈：${Math.round(length)}cm<br>
+       + "袖丈：" + Math.round(sleeve) + "cm<br>"
 
-袖丈：${Math.round(sleeve)}cm<br>
-
-裄丈：${Math.round(yuki)}cm
-
-`
+       + "裄丈：" + Math.round(yuki) + "cm"
 
 }else{
 
@@ -346,15 +340,11 @@ let waist=(w*0.45)+10
 
 let inseam=(h-27)*0.5
 
-result=`
+result = "<strong>ボトム推奨サイズ</strong><br><br>"
 
-<strong>ボトム推奨サイズ</strong><br><br>
+       + "ウエスト：" + Math.round(waist) + "cm<br>"
 
-ウエスト：${Math.round(waist)}cm<br>
-
-股下：${Math.round(inseam)}cm
-
-`
+       + "股下：" + Math.round(inseam) + "cm"
 
 }
 
