@@ -298,13 +298,15 @@ if(category==="tops"){
 
 let width=54+(w-60)*0.4
 
-let shoulder=width*0.8+1
+let shoulder=width*0.8
 
 let length=72+(h-170)*0.35
 
 let sleeve=60+(h-170)*0.3
 
 let yuki=sleeve+(shoulder/2)
+
+// 裄丈補正
 
 if(yuki<85){
 
@@ -324,15 +326,15 @@ shoulder-=1
 
 result=`
 
-トップス推奨サイズ
+<strong>トップス推奨サイズ</strong><br><br>
 
-肩幅：${Math.round(shoulder)}cm
+肩幅：${Math.round(shoulder)}cm<br>
 
-身幅：${Math.round(width)}cm
+身幅：${Math.round(width)}cm<br>
 
-着丈：${Math.round(length)}cm
+着丈：${Math.round(length)}cm<br>
 
-袖丈：${Math.round(sleeve)}cm
+袖丈：${Math.round(sleeve)}cm<br>
 
 裄丈：${Math.round(yuki)}cm
 
@@ -346,9 +348,9 @@ let inseam=(h-27)*0.5
 
 result=`
 
-ボトム推奨サイズ
+<strong>ボトム推奨サイズ</strong><br><br>
 
-ウエスト：${Math.round(waist)}cm
+ウエスト：${Math.round(waist)}cm<br>
 
 股下：${Math.round(inseam)}cm
 
