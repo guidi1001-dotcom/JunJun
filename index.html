@@ -2,29 +2,1660 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Fit Finder</title>
-</head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服のサイズ診断 — Fit Finder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+/* ===================================================
+   RESET & VARIABLES
+=================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:    #0a0a0a;
+  --white:    #fafafa;
+  --g100:     #f4f4f4;
+  --g200:     #e8e8e8;
+  --g300:     #d0d0d0;
+  --g400:     #aaaaaa;
+  --g600:     #666666;
+  --green:    #1a7a4a;
+  --green-bg: #e8f7ef;
+  --blue:     #1a4a8a;
+  --blue-bg:  #e8eef7;
+  --red:      #9a2020;
+  --red-bg:   #f7e8e8;
+  --radius:   14px;
+  --radius-sm:9px;
+  --shadow:   0 2px 16px rgba(0,0,0,0.07);
+  --trans:    0.22s ease;
+  --sticky-h: 80px;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: var(--g100);
+  color: var(--black);
+  min-height: 100vh;
+  padding-bottom: calc(var(--sticky-h) + 24px);
+}
+
+/* ===================================================
+   HEADER
+=================================================== */
+header {
+  background: var(--black); color: var(--white);
+  padding: 40px 20px 36px; text-align: center;
+}
+.header-sub {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); margin-bottom: 10px;
+}
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 7vw, 40px);
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+header h1 em { font-style: italic; color: rgba(255,255,255,0.55); }
+header p { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 300; }
+
+/* ===================================================
+   LAYOUT
+=================================================== */
+.wrap { max-width: 540px; margin: 0 auto; padding: 0 16px; }
+
+/* ===================================================
+   SECTION CARD
+=================================================== */
+.section {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-top: 16px; overflow: hidden;
+}
+.section-head {
+  padding: 16px 20px; border-bottom: 1px solid var(--g200);
+  display: flex; align-items: center; gap: 10px;
+}
+.layer-badge {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 100px;
+  background: var(--black); color: var(--white); flex-shrink: 0;
+}
+.layer-badge.l2 { background: var(--g600); }
+.layer-badge.l3 { background: var(--g400); color: var(--black); }
+.section-title { font-size: 13px; font-weight: 600; color: var(--black); flex: 1; }
+.section-hint  { font-size: 11px; color: var(--g400); font-weight: 400; }
+.section-body  { padding: 20px; }
+
+/* ===================================================
+   ACCORDION
+=================================================== */
+.accordion-trigger {
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--g600);
+  transition: color var(--trans), background var(--trans);
+}
+.accordion-trigger:hover { background: var(--g100); color: var(--black); }
+.accordion-trigger .acc-left { display: flex; align-items: center; gap: 10px; }
+.acc-arrow { font-size: 12px; color: var(--g400); transition: transform var(--trans); }
+.accordion-trigger[aria-expanded="true"] .acc-arrow { transform: rotate(180deg); }
+.accordion-body {
+  display: none; padding: 0 20px 20px;
+  border-top: 1px solid var(--g200); animation: fadeIn 0.2s ease;
+}
+.accordion-body.open { display: block; }
+.accordion-desc { font-size: 12px; color: var(--g400); padding: 12px 0 16px; line-height: 1.6; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===================================================
+   FORM ELEMENTS
+=================================================== */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field > label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--g600);
+}
+.field input[type="number"],
+.field select {
+  height: 46px; border: 1.5px solid var(--g200); border-radius: var(--radius-sm);
+  padding: 0 13px; font-family: inherit; font-size: 15px;
+  color: var(--black); background: var(--g100); outline: none;
+  transition: border-color var(--trans), background var(--trans);
+  appearance: none; -webkit-appearance: none; width: 100%;
+}
+.field input[type="number"]:focus,
+.field select:focus { border-color: var(--black); background: var(--white); }
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: ''; position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid var(--g600); pointer-events: none;
+}
+
+/* ===================================================
+   SEGMENT CONTROL
+=================================================== */
+.seg-group {
+  display: flex; border-radius: var(--radius-sm);
+  overflow: hidden; border: 1.5px solid var(--g200); background: var(--g100);
+}
+.seg-group input[type="radio"] { display: none; }
+.seg-group label {
+  flex: 1; text-align: center; padding: 11px 4px;
+  font-size: 13px; font-weight: 500; color: var(--g600); cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+  line-height: 1.2; user-select: none;
+}
+.seg-group input[type="radio"]:checked + label { background: var(--black); color: var(--white); }
+
+/* ===================================================
+   SVG ICON SYSTEM
+=================================================== */
+.ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; width: 24px; height: 24px; color: var(--g600);
+}
+.ic svg {
+  width: 24px; height: 24px; stroke: currentColor; fill: none;
+  stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ===================================================
+   CATEGORY TOGGLE
+=================================================== */
+.category-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cat-btn {
+  border: 2px solid var(--g200); border-radius: var(--radius-sm);
+  padding: 18px 12px 16px; background: var(--g100);
+  cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  transition: border-color var(--trans), background var(--trans), transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cat-btn:active { transform: scale(0.97); }
+.cat-btn.active { border-color: var(--black); background: var(--black); }
+.cat-btn .ic { color: var(--g600); }
+.cat-btn.active .ic { color: var(--white); }
+.cat-btn .cat-name { font-size: 14px; font-weight: 700; color: var(--black); }
+.cat-btn.active .cat-name { color: var(--white); }
+.cat-btn .cat-desc { font-size: 10px; color: var(--g400); font-weight: 400; }
+.cat-btn.active .cat-desc { color: rgba(255,255,255,0.5); }
+
+/* ===================================================
+   ITEM GRID
+=================================================== */
+.item-grid-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--g600); margin-bottom: 8px; display: block;
+}
+.item-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.item-grid input[type="radio"] { display: none; }
+.item-card {
+  border: 1.5px solid var(--g200); border-radius: var(--radius-sm);
+  padding: 12px 11px; background: var(--g100);
+  cursor: pointer; display: flex; align-items: center; gap: 10px;
+  transition: border-color var(--trans), background var(--trans), box-shadow var(--trans);
+  user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.item-grid input[type="radio"]:checked + .item-card {
+  border-color: var(--black); background: var(--white); box-shadow: 0 0 0 1px var(--black);
+}
+.item-grid input[type="radio"]:checked + .item-card .ic { color: var(--black); }
+.item-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.item-card-name { font-size: 13px; font-weight: 600; color: var(--black); line-height: 1.2; }
+.item-card-sub {
+  font-size: 10px; color: var(--g400); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===================================================
+   CHECKBOX
+=================================================== */
+.check-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.check-item {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 10px 13px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--g200); background: var(--g100);
+  transition: border-color var(--trans), background var(--trans);
+  user-select: none;
+}
+.check-item:hover { border-color: var(--g300); background: var(--white); }
+.check-item input[type="checkbox"] { display: none; }
+.check-box {
+  width: 18px; height: 18px; border: 2px solid var(--g300); border-radius: 4px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--trans), background var(--trans);
+  font-size: 10px; color: var(--white);
+}
+.check-item input[type="checkbox"]:checked ~ .check-box { border-color: var(--black); background: var(--black); }
+.check-item input[type="checkbox"]:checked ~ .check-box::after { content: '✓'; }
+.check-label { font-size: 13px; color: var(--black); font-weight: 500; }
+.check-sub   { font-size: 11px; color: var(--g400); font-weight: 400; }
+
+/* ===================================================
+   DIVIDER / SPACING
+=================================================== */
+.divider { height: 1px; background: var(--g200); margin: 16px 0; }
+.mt8  { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+
+/* ===================================================
+   STICKY BUTTON
+=================================================== */
+.sticky-btn-wrap {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(250,250,250,0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--g200); padding: 12px 16px;
+}
+.sticky-btn-inner { max-width: 540px; margin: 0 auto; }
+.btn-diagnose {
+  width: 100%; height: 52px;
+  background: var(--black); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: background var(--trans), transform 0.1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-diagnose:hover { background: #333; }
+.btn-diagnose:active { transform: scale(0.98); }
+
+/* ===================================================
+   ERROR
+=================================================== */
+.error-inline {
+  display: none; margin-top: 12px; padding: 11px 14px;
+  background: #fff5f5; border: 1.5px solid #ffcccc;
+  border-radius: var(--radius-sm); font-size: 13px; color: #cc3333; font-weight: 500;
+}
+.error-inline.show { display: block; }
+
+/* ===================================================
+   RESULT
+=================================================== */
+.result-section {
+  display: none; background: var(--white);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-top: 16px; overflow: hidden; animation: fadeUp 0.4s ease;
+}
+.result-section.show { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Result hero（黒背景エリア） */
+.result-hero { background: var(--black); color: var(--white); padding: 28px 24px 24px; }
+.result-meta {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.result-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); margin-bottom: 4px;
+}
+.result-hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; letter-spacing: -0.01em; line-height: 1.2;
+}
+.result-item-type { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 2px; font-weight: 300; }
+
+/* 評価バッジ */
+.rating-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 100px; font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.rating-best { background: var(--green-bg); color: var(--green); }
+.rating-good { background: var(--blue-bg);  color: var(--blue); }
+.rating-warn { background: var(--red-bg);   color: var(--red); }
+
+/* メトリクスグリッド */
+.metrics-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: rgba(255,255,255,0.08);
+  border-radius: 10px; overflow: hidden;
+}
+.metric {
+  padding: 16px 14px; background: rgba(255,255,255,0.04);
+  display: flex; flex-direction: column; gap: 3px; transition: background 0.15s;
+}
+.metric:hover { background: rgba(255,255,255,0.09); }
+.metric.span2 { grid-column: span 2; background: rgba(255,255,255,0.08); }
+
+/* 強調メトリクス（主要な数値） */
+.metric.emphasized { background: rgba(255,255,255,0.10); }
+.metric.emphasized:hover { background: rgba(255,255,255,0.15); }
+
+.metric-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.38);
+}
+.metric-val {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px; letter-spacing: -0.02em; color: var(--white); line-height: 1;
+}
+.metric.emphasized .metric-val { font-size: 36px; }
+.metric-unit { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+/* ⑤ パンツ追加情報（股上タイプ・裾の溜まり） */
+.pants-info-wrap {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08);
+}
+.pants-info-list {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.pants-info-item {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.07); border-radius: 8px;
+  padding: 8px 12px; min-width: 0;
+}
+.pants-info-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); white-space: nowrap;
+}
+.pants-info-val {
+  font-size: 13px; font-weight: 600; color: var(--white);
+}
+
+/* 補正ログ */
+.corrections-wrap { padding: 16px 20px; border-top: 1px solid var(--g200); }
+.corrections-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--g400); margin-bottom: 8px;
+}
+.correction-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 100px;
+  font-size: 11px; font-weight: 500;
+  background: var(--g100); color: var(--g600);
+  margin: 3px 3px 0 0; border: 1px solid var(--g200);
+}
+.correction-tag .ctag-key { color: var(--black); font-weight: 700; }
+.correction-tag .ctag-val { color: var(--g400); }
+
+/* ===================================================
+   FOOTER
+=================================================== */
+.footer-note {
+  margin-top: 16px; font-size: 11px;
+  color: var(--g400); line-height: 1.7; padding: 0 4px;
+}
+
+/* ===================================================
+   RESPONSIVE
+=================================================== */
+@media (max-width: 380px) {
+  .item-card { padding: 10px 8px; gap: 8px; }
+  .item-card-name { font-size: 12px; }
+  .metric.emphasized .metric-val { font-size: 30px; }
+  .metric-val { font-size: 24px; }
+  .seg-group label { font-size: 12px; padding: 10px 3px; }
+  .pants-info-item { padding: 7px 10px; }
+}
+/* ===================================================
+   FEEDBACK / 学習機能 UI
+=================================================== */
+.feedback-wrap {
+  padding: 20px;
+  border-top: 1px solid var(--g200);
+  background: var(--g100);
+}
+.feedback-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--g400); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.feedback-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.feedback-row {
+  display: flex; gap: 8px; align-items: stretch;
+}
+.feedback-input-wrap { flex: 1; }
+.feedback-input-wrap label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--g600); margin-bottom: 5px;
+}
+.feedback-input {
+  width: 100%; height: 46px;
+  border: 1.5px solid var(--g200); border-radius: var(--radius-sm);
+  padding: 0 13px; font-family: inherit; font-size: 15px;
+  color: var(--black); background: var(--white); outline: none;
+  transition: border-color var(--trans);
+}
+.feedback-input:focus { border-color: var(--black); }
+.btn-feedback {
+  height: 46px; padding: 0 18px;
+  background: var(--black); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap;
+  transition: background var(--trans), transform 0.1s;
+  align-self: flex-end;
+}
+.btn-feedback:hover { background: #333; }
+.btn-feedback:active { transform: scale(0.97); }
+
+/* 学習状態インジケーター */
+.learn-status {
+  margin-top: 10px;
+  font-size: 12px; color: var(--g600);
+  display: flex; align-items: center; gap: 6px;
+}
+.learn-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--g300); flex-shrink: 0;
+  transition: background 0.3s;
+}
+.learn-dot.active { background: var(--green); }
+
+.feedback-toast {
+  display: none;
+  margin-top: 10px; padding: 10px 14px;
+  background: var(--green-bg);
+  border: 1.5px solid #a8dfc0;
+  border-radius: var(--radius-sm);
+  font-size: 12px; color: var(--green); font-weight: 600;
+  animation: fadeIn 0.25s ease;
+}
+.feedback-toast.show { display: block; }
+</style>
+</head>
 <body>
 
-<h1>Fit Finder</h1>
+<!-- =====================================================
+     SVG SPRITE
+====================================================== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="icon-shirt" viewBox="0 0 24 24">
+      <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+    </symbol>
+    <symbol id="icon-sweat" viewBox="0 0 24 24">
+      <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+      <path d="M9 16h6"/>
+    </symbol>
+    <symbol id="icon-hoodie" viewBox="0 0 24 24">
+      <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+      <path d="M12 2c0 0-2 1.5-2 3.5M12 2c0 0 2 1.5 2 3.5"/>
+    </symbol>
+    <symbol id="icon-jacket" viewBox="0 0 24 24">
+      <path d="M20.38 3.46 16 2l-2 3-2-3L7.62 3.46A2 2 0 0 0 6.28 5.7l.58 3.57A1 1 0 0 0 7.85 10H9v10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V10h1.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+      <path d="M12 5v4"/>
+    </symbol>
+    <symbol id="icon-pants" viewBox="0 0 24 24">
+      <path d="M6 2h12l1 8H5z"/>
+      <path d="M5 10l-1 12h5l3-7 3 7h5L19 10"/>
+    </symbol>
+    <symbol id="icon-shorts" viewBox="0 0 24 24">
+      <path d="M6 2h12l1 8H5z"/>
+      <path d="M5 10l-1 8h5l3-4 3 4h5l-1-8"/>
+    </symbol>
+    <symbol id="icon-cat-tops" viewBox="0 0 24 24">
+      <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+    </symbol>
+    <symbol id="icon-cat-bottoms" viewBox="0 0 24 24">
+      <path d="M6 2h12l1 8H5z"/>
+      <path d="M5 10l-1 12h5l3-7 3 7h5L19 10"/>
+    </symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </symbol>
+  </defs>
+</svg>
 
-身長<input id="h"><br>
-体重<input id="w"><br>
+<!-- =====================================================
+     HEADER
+====================================================== -->
+<header>
+  <p class="header-sub">Fit Finder</p>
+  <h1>服のサイズ<br><em>診断ツール</em></h1>
+  <p>3段階の詳細設定で、あなただけのサイズを算出</p>
+</header>
 
-<button onclick="go()">診断</button>
+<div class="wrap">
 
-<p>肩幅：<span id="s"></span></p>
+<!-- =====================================================
+     LAYER 1 — 基本情報（必須）
+====================================================== -->
+<div class="section">
+  <div class="section-head">
+    <span class="layer-badge">Layer 1</span>
+    <span class="section-title">基本情報</span>
+    <span class="section-hint">必須</span>
+  </div>
+  <div class="section-body">
 
+    <div class="form-row">
+      <div class="field">
+        <label>身長 (cm)</label>
+        <input type="number" id="height" placeholder="170" min="100" max="250" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>体重 (kg)</label>
+        <input type="number" id="weight" placeholder="60" min="20" max="250" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="field mt12">
+      <label>性別</label>
+      <div class="seg-group">
+        <input type="radio" name="gender" id="g-male"   value="male"   checked>
+        <label for="g-male">男性</label>
+        <input type="radio" name="gender" id="g-female" value="female">
+        <label for="g-female">女性</label>
+      </div>
+    </div>
+
+    <div class="field mt16">
+      <label>カテゴリ</label>
+      <div class="category-toggle">
+        <button class="cat-btn active" id="cat-tops" onclick="selectCategory('tops')">
+          <span class="ic"><svg><use href="#icon-cat-tops"/></svg></span>
+          <span class="cat-name">上着</span>
+          <span class="cat-desc">トップス</span>
+        </button>
+        <button class="cat-btn" id="cat-bottoms" onclick="selectCategory('bottoms')">
+          <span class="ic"><svg><use href="#icon-cat-bottoms"/></svg></span>
+          <span class="cat-name">ボトム</span>
+          <span class="cat-desc">パンツ・スカート</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 上着の種類 -->
+    <div class="field mt12" id="tops-items">
+      <span class="item-grid-label">上着の種類</span>
+      <div class="item-grid">
+        <input type="radio" name="tops_type" id="tt-tshirt"      value="tshirt"      checked>
+        <label class="item-card" for="tt-tshirt">
+          <span class="ic"><svg><use href="#icon-shirt"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">Tシャツ</span><span class="item-card-sub">半袖</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-lont"        value="lont">
+        <label class="item-card" for="tt-lont">
+          <span class="ic"><svg><use href="#icon-shirt"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">ロンT</span><span class="item-card-sub">長袖カットソー</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-dress-shirt" value="dress_shirt">
+        <label class="item-card" for="tt-dress-shirt">
+          <span class="ic"><svg><use href="#icon-shirt"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">シャツ</span><span class="item-card-sub">ドレス・きれいめ</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-work-shirt"  value="work_shirt">
+        <label class="item-card" for="tt-work-shirt">
+          <span class="ic"><svg><use href="#icon-shirt"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">シャツ</span><span class="item-card-sub">ワーク・カジュアル</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-sweat"       value="sweat">
+        <label class="item-card" for="tt-sweat">
+          <span class="ic"><svg><use href="#icon-sweat"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">スウェット</span><span class="item-card-sub">裏起毛など</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-hoodie"      value="hoodie">
+        <label class="item-card" for="tt-hoodie">
+          <span class="ic"><svg><use href="#icon-hoodie"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">パーカー</span><span class="item-card-sub">フーディー</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-light-outer" value="light_outer">
+        <label class="item-card" for="tt-light-outer">
+          <span class="ic"><svg><use href="#icon-jacket"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">軽アウター</span><span class="item-card-sub">ナイロン・コーチ</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-denim-jkt"   value="denim_jkt">
+        <label class="item-card" for="tt-denim-jkt">
+          <span class="ic"><svg><use href="#icon-jacket"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">デニムジャケット</span><span class="item-card-sub">Gジャン</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-duck-jkt"    value="duck_jkt">
+        <label class="item-card" for="tt-duck-jkt">
+          <span class="ic"><svg><use href="#icon-jacket"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">ダックジャケット</span><span class="item-card-sub">カバーオール系</span></span>
+        </label>
+
+        <input type="radio" name="tops_type" id="tt-leather-jkt" value="leather_jkt">
+        <label class="item-card" for="tt-leather-jkt">
+          <span class="ic"><svg><use href="#icon-jacket"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">レザージャケット</span><span class="item-card-sub">革ジャン</span></span>
+        </label>
+      </div>
+    </div><!-- /tops-items -->
+
+    <!-- ボトムの種類 -->
+    <div class="field mt12" id="bottoms-items" style="display:none">
+      <span class="item-grid-label">ボトムの種類</span>
+      <div class="item-grid">
+        <input type="radio" name="bottoms_type" id="bt-denim-str"   value="denim_str"   checked>
+        <label class="item-card" for="bt-denim-str">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">デニム</span><span class="item-card-sub">ストレート</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-denim-wide"  value="denim_wide">
+        <label class="item-card" for="bt-denim-wide">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">デニム</span><span class="item-card-sub">ワイド</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-slacks"      value="slacks">
+        <label class="item-card" for="bt-slacks">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">スラックス</span><span class="item-card-sub">テーパード系</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-cargo"       value="cargo">
+        <label class="item-card" for="bt-cargo">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">カーゴパンツ</span><span class="item-card-sub">ミリタリー系</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-sweat-pants" value="sweat_pants">
+        <label class="item-card" for="bt-sweat-pants">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">スウェットパンツ</span><span class="item-card-sub">イージーパンツ</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-shorts"      value="shorts">
+        <label class="item-card" for="bt-shorts">
+          <span class="ic"><svg><use href="#icon-shorts"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">ショーツ</span><span class="item-card-sub">ハーフパンツ</span></span>
+        </label>
+
+        <input type="radio" name="bottoms_type" id="bt-military"    value="military">
+        <label class="item-card" for="bt-military">
+          <span class="ic"><svg><use href="#icon-pants"/></svg></span>
+          <span class="item-card-text"><span class="item-card-name">ミリタリー</span><span class="item-card-sub">深股上・ワークパンツ</span></span>
+        </label>
+      </div>
+    </div><!-- /bottoms-items -->
+
+    <div class="error-inline" id="error-inline">身長と体重を正しく入力してください</div>
+
+  </div>
+</div><!-- /layer1 -->
+
+<!-- =====================================================
+     LAYER 2 — 詳細設定
+====================================================== -->
+<div class="section">
+  <button class="accordion-trigger" aria-expanded="false" onclick="toggleAcc(this)">
+    <span class="acc-left">
+      <span class="layer-badge l2">Layer 2</span>
+      <span>詳細設定を開く</span>
+    </span>
+    <span class="acc-arrow">▼</span>
+  </button>
+  <div class="accordion-body">
+    <p class="accordion-desc">シルエット・丈感・体型など、診断精度を上げる設定です。</p>
+
+    <!-- シルエット（共通） -->
+    <div class="field">
+      <label>シルエット</label>
+      <div class="seg-group">
+        <input type="radio" name="silhouette" id="s-tight"  value="tight">
+        <label for="s-tight">タイト</label>
+        <input type="radio" name="silhouette" id="s-normal" value="normal" checked>
+        <label for="s-normal">普通</label>
+        <input type="radio" name="silhouette" id="s-big"    value="big">
+        <label for="s-big">ビッグ</label>
+      </div>
+    </div>
+
+    <!-- サイズ特性（上着のみ・⑦条件分岐） -->
+    <div class="field mt12" id="size-type-field">
+      <label>サイズ特性</label>
+      <div class="seg-group">
+        <input type="radio" name="size_type" id="st-tight"    value="tight">
+        <label for="st-tight">タイト</label>
+        <input type="radio" name="size_type" id="st-standard" value="standard" checked>
+        <label for="st-standard">標準</label>
+        <input type="radio" name="size_type" id="st-loose"    value="loose">
+        <label for="st-loose">ゆったり</label>
+        <input type="radio" name="size_type" id="st-over"     value="over">
+        <label for="st-over">オーバー</label>
+      </div>
+    </div>
+
+    <!-- 丈感（上着） -->
+    <div class="field mt12" id="length-tops">
+      <label>丈感</label>
+      <div class="seg-group">
+        <input type="radio" name="length_tops" id="lt-short"  value="short">
+        <label for="lt-short">短丈</label>
+        <input type="radio" name="length_tops" id="lt-normal" value="normal" checked>
+        <label for="lt-normal">普通</label>
+        <input type="radio" name="length_tops" id="lt-long"   value="long">
+        <label for="lt-long">ロング</label>
+      </div>
+    </div>
+
+    <!-- 丈感（ボトム） -->
+    <div class="field mt12" id="length-pants" style="display:none">
+      <label>丈感</label>
+      <div class="seg-group">
+        <input type="radio" name="length_pants" id="lp-short" value="short">
+        <label for="lp-short">短め</label>
+        <input type="radio" name="length_pants" id="lp-just"  value="just" checked>
+        <label for="lp-just">ジャスト</label>
+        <input type="radio" name="length_pants" id="lp-long"  value="long">
+        <label for="lp-long">長め</label>
+      </div>
+    </div>
+
+    <!-- ① 股上タイプ（ボトムのみ・4段階） -->
+    <div class="field mt12" id="rise-field" style="display:none">
+      <label>股上タイプ</label>
+      <div class="seg-group">
+        <input type="radio" name="rise" id="rise-low"        value="low">
+        <label for="rise-low">ローライズ</label>
+        <input type="radio" name="rise" id="rise-mid"        value="mid" checked>
+        <label for="rise-mid">ミドル</label>
+        <input type="radio" name="rise" id="rise-high"       value="high">
+        <label for="rise-high">ハイライズ</label>
+        <input type="radio" name="rise" id="rise-super-high" value="super_high">
+        <label for="rise-super-high">深いハイライズ</label>
+      </div>
+    </div>
+
+    <!-- 履き位置（ボトムのみ） -->
+    <div class="field mt12" id="wear-position-field" style="display:none">
+      <label>履き位置</label>
+      <div class="seg-group">
+        <input type="radio" name="wear_position" id="wp-low" value="low">
+        <label for="wp-low">低め</label>
+        <input type="radio" name="wear_position" id="wp-mid" value="mid" checked>
+        <label for="wp-mid">標準</label>
+        <input type="radio" name="wear_position" id="wp-high" value="high">
+        <label for="wp-high">高め</label>
+      </div>
+    </div>
+
+    <!-- ② 裾の溜まり（ボトムのみ） -->
+    <div class="field mt12" id="hem-field" style="display:none">
+      <label>裾の溜まり</label>
+      <div class="seg-group">
+        <input type="radio" name="hem" id="hem-none"   value="none" checked>
+        <label for="hem-none">なし</label>
+        <input type="radio" name="hem" id="hem-light"  value="light">
+        <label for="hem-light">軽く</label>
+        <input type="radio" name="hem" id="hem-heavy"  value="heavy">
+        <label for="hem-heavy">しっかり</label>
+      </div>
+    </div>
+
+    <!-- ⑤ 裾位置（ボトムのみ・最重要） -->
+    <div class="field mt12" id="hem-position-field" style="display:none">
+      <label>裾位置</label>
+      <div class="seg-group">
+        <input type="radio" name="hem_position" id="hp-ankle" value="ankle">
+        <label for="hp-ankle">くるぶし</label>
+        <input type="radio" name="hem_position" id="hp-heel"  value="heel" checked>
+        <label for="hp-heel">かかと付近</label>
+        <input type="radio" name="hem_position" id="hp-shoe"  value="shoe">
+        <label for="hp-shoe">靴に乗る</label>
+        <input type="radio" name="hem_position" id="hp-stack" value="stack">
+        <label for="hp-stack">溜める</label>
+      </div>
+    </div>
+
+    <!-- 体型（共通） -->
+    <div class="field mt12">
+      <label>体型の特徴</label>
+      <div class="check-group">
+        <!-- なで肩は上着のみ表示 -->
+        <label class="check-item tops-only-field" id="nade-kata-field">
+          <input type="checkbox" id="nade-kata">
+          <span class="check-box"></span>
+          <span>
+            <span class="check-label">なで肩</span><br>
+            <span class="check-sub">肩幅 -1cm 補正</span>
+          </span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="gassiri">
+          <span class="check-box"></span>
+          <span>
+            <span class="check-label">がっしり体型</span><br>
+            <span class="check-sub tops-only-text">身幅 +2cm 補正</span>
+            <span class="check-sub bottoms-only-text" style="display:none">ウエスト +2cm 補正</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /layer2 -->
+
+<!-- =====================================================
+     LAYER 3 — 上着用・上級設定
+====================================================== -->
+<div class="section" id="layer3-section">
+  <button class="accordion-trigger" aria-expanded="false" onclick="toggleAcc(this)">
+    <span class="acc-left">
+      <span class="layer-badge l3">Layer 3</span>
+      <span>上級設定を開く</span>
+    </span>
+    <span class="acc-arrow">▼</span>
+  </button>
+  <div class="accordion-body">
+    <p class="accordion-desc">体型や着方の細かいこだわりを設定できます。</p>
+
+    <div class="field">
+      <label>肩幅タイプ</label>
+      <div class="seg-group">
+        <input type="radio" name="shoulder_type" id="sh-narrow" value="narrow">
+        <label for="sh-narrow">狭い</label>
+        <input type="radio" name="shoulder_type" id="sh-normal" value="normal" checked>
+        <label for="sh-normal">普通</label>
+        <input type="radio" name="shoulder_type" id="sh-wide"   value="wide">
+        <label for="sh-wide">広い</label>
+      </div>
+    </div>
+
+    <div class="field mt12">
+      <label>腕の長さ</label>
+      <div class="seg-group">
+        <input type="radio" name="arm_len" id="al-short"  value="short">
+        <label for="al-short">短い</label>
+        <input type="radio" name="arm_len" id="al-normal" value="normal" checked>
+        <label for="al-normal">普通</label>
+        <input type="radio" name="arm_len" id="al-long"   value="long">
+        <label for="al-long">長い</label>
+      </div>
+    </div>
+
+    <div class="field mt12">
+      <label>胴の長さ</label>
+      <div class="seg-group">
+        <input type="radio" name="torso_len" id="tl-short"  value="short">
+        <label for="tl-short">短胴</label>
+        <input type="radio" name="torso_len" id="tl-normal" value="normal" checked>
+        <label for="tl-normal">普通</label>
+        <input type="radio" name="torso_len" id="tl-long"   value="long">
+        <label for="tl-long">長胴</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>着用目的</label>
+      <div class="seg-group">
+        <input type="radio" name="wear_purpose" id="wp-just"  value="just" checked>
+        <label for="wp-just">ジャスト</label>
+        <input type="radio" name="wear_purpose" id="wp-loose" value="loose">
+        <label for="wp-loose">ゆるめ</label>
+        <input type="radio" name="wear_purpose" id="wp-over"  value="over">
+        <label for="wp-over">オーバー</label>
+      </div>
+    </div>
+
+    <div class="field mt12">
+      <label>レイヤリング（インナー）</label>
+      <div class="seg-group">
+        <input type="radio" name="layering" id="ly-none"  value="none" checked>
+        <label for="ly-none">なし</label>
+        <input type="radio" name="layering" id="ly-tee"   value="tee">
+        <label for="ly-tee">Tシャツ</label>
+        <input type="radio" name="layering" id="ly-heavy" value="heavy">
+        <label for="ly-heavy">厚手</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>素材</label>
+      <div class="select-wrap">
+        <select id="material">
+          <option value="normal">通常（±0cm）</option>
+          <option value="denim">デニム（+1cm）</option>
+          <option value="duck">ダック（+2cm）</option>
+          <option value="nylon">ナイロン（-1cm）</option>
+          <option value="wool">ウール（±0cm）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>ジャンル</label>
+      <div class="seg-group">
+        <input type="radio" name="genre" id="gn-casual"  value="casual" checked>
+        <label for="gn-casual">カジュアル</label>
+        <input type="radio" name="genre" id="gn-street"  value="street">
+        <label for="gn-street">ストリート</label>
+        <input type="radio" name="genre" id="gn-work"    value="work">
+        <label for="gn-work">ワーク</label>
+        <input type="radio" name="genre" id="gn-amekaji" value="amekaji">
+        <label for="gn-amekaji">アメカジ</label>
+        <input type="radio" name="genre" id="gn-mode"    value="mode">
+        <label for="gn-mode">モード</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>好み・こだわり</label>
+      <div class="check-group">
+        <label class="check-item">
+          <input type="checkbox" id="pref-sleeve">
+          <span class="check-box"></span>
+          <span>
+            <span class="check-label">袖は長めが好き</span><br>
+            <span class="check-sub">袖丈 +1cm 補正</span>
+          </span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="pref-short-length">
+          <span class="check-box"></span>
+          <span>
+            <span class="check-label">着丈は短めが好き</span><br>
+            <span class="check-sub">着丈 -2cm 補正</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /layer3 -->
+
+<!-- =====================================================
+     LAYER 3（ボトム用） — 脚バランスのみ
+====================================================== -->
+<div class="section" id="layer3-bottoms-section" style="display:none">
+  <button class="accordion-trigger" aria-expanded="false" onclick="toggleAcc(this)">
+    <span class="acc-left">
+      <span class="layer-badge l3">Layer 3</span>
+      <span>上級設定を開く</span>
+    </span>
+    <span class="acc-arrow">▼</span>
+  </button>
+  <div class="accordion-body">
+    <p class="accordion-desc">脚の長さのバランスをもとに股下をさらに細かく調整します。</p>
+
+    <!-- 脚バランス -->
+    <div class="field">
+      <label>脚バランス（体型補正）</label>
+      <div class="seg-group">
+        <input type="radio" name="leg_balance" id="lb-short"  value="short">
+        <label for="lb-short">短め</label>
+        <input type="radio" name="leg_balance" id="lb-normal" value="normal" checked>
+        <label for="lb-normal">普通</label>
+        <input type="radio" name="leg_balance" id="lb-long"   value="long">
+        <label for="lb-long">長め</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 総丈基準モード -->
+    <div class="field">
+      <label>算出モード</label>
+      <div class="seg-group">
+        <input type="radio" name="length_mode" id="lm-auto"  value="auto" checked>
+        <label for="lm-auto">自動計算</label>
+        <input type="radio" name="length_mode" id="lm-total" value="total">
+        <label for="lm-total">総丈から逆算</label>
+      </div>
+    </div>
+
+    <!-- 総丈入力（総丈モード選択時に使用） -->
+    <div class="field mt8">
+      <label>希望の総丈 (cm)</label>
+      <input type="number" id="user_total" placeholder="例: 108"
+             inputmode="numeric" min="60" max="160"
+             style="height:46px;border:1.5px solid var(--g200);border-radius:var(--radius-sm);padding:0 13px;font-family:inherit;font-size:15px;color:var(--black);background:var(--g100);outline:none;width:100%;appearance:none;-webkit-appearance:none;">
+    </div>
+
+  </div>
+</div><!-- /layer3-bottoms -->
+
+<!-- =====================================================
+     RESULT
+====================================================== -->
+<div class="result-section" id="result-section">
+
+  <div class="result-hero">
+    <div class="result-meta">
+      <div>
+        <p class="result-label">診断結果</p>
+        <p class="result-hero-title" id="r-item-name">Tシャツ</p>
+        <p class="result-item-type"  id="r-item-category">上着 / トップス</p>
+      </div>
+      <div class="rating-badge rating-best" id="r-badge">◎ ベスト</div>
+    </div>
+
+    <!-- トップスメトリクス -->
+    <div class="metrics-grid" id="r-tops-metrics">
+      <div class="metric emphasized">
+        <span class="metric-label">肩幅</span>
+        <span class="metric-val" id="r-shoulder">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric emphasized">
+        <span class="metric-label">身幅</span>
+        <span class="metric-val" id="r-width">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">着丈</span>
+        <span class="metric-val" id="r-length">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">袖丈</span>
+        <span class="metric-val" id="r-sleeve">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric span2">
+        <span class="metric-label">裄丈（フィット評価）</span>
+        <span class="metric-val" id="r-yuki">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+    </div>
+
+    <!-- ボトムメトリクス -->
+    <div class="metrics-grid" id="r-pants-metrics" style="display:none">
+      <div class="metric emphasized">
+        <span class="metric-label">ウエスト</span>
+        <span class="metric-val" id="r-waist">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric emphasized">
+        <span class="metric-label">股下</span>
+        <span class="metric-val" id="r-inseam">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+      <div class="metric span2">
+        <span class="metric-label">総丈（股下 + 股上）</span>
+        <span class="metric-val" id="r-total">—</span>
+        <span class="metric-unit">cm</span>
+      </div>
+    </div>
+
+    <!-- ⑧ パンツ詳細情報（股上・裾の溜まり・裾位置） -->
+    <div class="pants-info-wrap" id="r-pants-info" style="display:none">
+      <div class="pants-info-list">
+        <div class="pants-info-item">
+          <span class="pants-info-label">股上</span>
+          <span class="pants-info-val" id="r-rise-label">ミドル</span>
+        </div>
+        <div class="pants-info-item">
+          <span class="pants-info-label">裾の溜まり</span>
+          <span class="pants-info-val" id="r-hem-label">なし</span>
+        </div>
+        <div class="pants-info-item">
+          <span class="pants-info-label">裾位置</span>
+          <span class="pants-info-val" id="r-hem-pos-label">かかと付近</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /result-hero -->
+
+  <!-- 補正ログ -->
+  <div class="corrections-wrap">
+    <p class="corrections-title">適用した補正</p>
+    <div id="corrections-list"></div>
+  </div>
+
+  <!-- 学習フィードバック（パンツ診断時のみ表示） -->
+  <div class="feedback-wrap" id="feedback-wrap" style="display:none">
+    <p class="feedback-title">実測フィードバック</p>
+    <div class="feedback-row">
+      <div class="feedback-input-wrap">
+        <label for="realTotal">実測総丈（cm）</label>
+        <input type="number" id="realTotal" class="feedback-input"
+               placeholder="例: 106" inputmode="numeric" min="60" max="160">
+      </div>
+      <div class="feedback-input-wrap">
+        <label for="realInseam">実測股下（cm）</label>
+        <input type="number" id="realInseam" class="feedback-input"
+               placeholder="例: 78" inputmode="numeric" min="40" max="120">
+      </div>
+      <button class="btn-feedback" onclick="applyOuterTopFeedback()">学習</button>
+    </div>
+    <div class="learn-status" id="learn-status">
+      <span class="learn-dot" id="learn-dot"></span>
+      <span id="learn-status-text">学習データなし</span>
+    </div>
+    <div class="feedback-toast" id="feedback-toast">✓ 学習しました。次回の診断から反映されます。</div>
+  </div>
+
+</div><!-- /result-section -->
+
+<p class="footer-note">
+  ※ 算出値はあくまで目安です。実際の着用感はブランドやパターンにより異なります。<br>
+  ※ 裄丈評価はトップス診断時のみ表示されます。
+</p>
+
+</div><!-- /wrap -->
+
+<!-- =====================================================
+     STICKY BUTTON
+====================================================== -->
+<div class="sticky-btn-wrap">
+  <div class="sticky-btn-inner">
+    <button class="btn-diagnose" onclick="diagnose()">
+      <span>診断する</span>
+      <span class="ic" style="color:var(--white)"><svg><use href="#icon-arrow-right"/></svg></span>
+    </button>
+  </div>
+</div>
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
 <script>
-function go(){
- let h = document.getElementById('h').value;
- let w = document.getElementById('w').value;
+/* ─────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────── */
+let currentCategory      = 'tops';
+let lastCalculatedInseam = null; // フィードバック用
 
- let width = 54 + (w - 60)*0.4;
+/* ─────────────────────────────────────────────────
+   学習機能 A — outerTop（外側上部）学習
+   総丈 = 股下 + outerTop（アウトシーム定義）
+───────────────────────────────────────────────── */
+const OUTER_TOP_KEY = 'fitFinder_outerTopHistory';
 
- document.getElementById('s').textContent = Math.round(width);
+/**
+ * outerTop（外側上部）= 身長 × 0.162
+ * 総丈 = inseam + outerTop（アウトシーム定義）
+ */
+function getOuterTop(heightVal) {
+  return heightVal * 0.162;
 }
+
+/**
+ * 実測総丈・実測股下から outerTop を保存（最大10件）
+ * @param {number} realTotal   実測総丈
+ * @param {number} realInseam  実測股下
+ */
+function saveOuterTop(realTotal, realInseam) {
+  const outerTop = realTotal - realInseam;
+  let history = JSON.parse(localStorage.getItem(OUTER_TOP_KEY) || '[]');
+  history.push(outerTop);
+  if (history.length > 10) history.shift();
+  localStorage.setItem(OUTER_TOP_KEY, JSON.stringify(history));
+}
+
+/**
+ * 学習済み outerTop の平均を返す（データなしなら null）
+ * @returns {number|null}
+ */
+function getLearnedOuterTop() {
+  const history = JSON.parse(localStorage.getItem(OUTER_TOP_KEY) || '[]');
+  if (history.length === 0) return null;
+  return history.reduce((a, b) => a + b, 0) / history.length;
+}
+
+/**
+ * 学習ボタン（実測総丈 + 実測股下から outerTop を学習）
+ */
+function applyOuterTopFeedback() {
+  const total  = parseFloat(document.getElementById('realTotal').value);
+  const inseam = parseFloat(document.getElementById('realInseam').value);
+  if (isNaN(total) || isNaN(inseam) || total < 60 || inseam < 40) return;
+
+  saveOuterTop(total, inseam);
+
+  // トースト表示
+  const toast = document.getElementById('feedback-toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+
+  // 入力クリア
+  document.getElementById('realTotal').value   = '';
+  document.getElementById('realInseam').value  = '';
+
+  updateLearnStatus();
+}
+
+/* 旧 applyFeedback は後方互換で残す */
+function applyFeedback() { applyOuterTopFeedback(); }
+
+/**
+ * 学習状態インジケーターを更新
+ */
+function updateLearnStatus() {
+  const history = JSON.parse(localStorage.getItem(OUTER_TOP_KEY) || '[]');
+  const dot     = document.getElementById('learn-dot');
+  const text    = document.getElementById('learn-status-text');
+
+  if (history.length === 0) {
+    dot.classList.remove('active');
+    text.textContent = '学習データなし';
+  } else {
+    const avg  = history.reduce((a, b) => a + b, 0) / history.length;
+    dot.classList.add('active');
+    text.textContent = `学習済み ${history.length}件 / 外側上部 平均 ${avg.toFixed(1)}cm`;
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   ITEM TABLES
+   Tops: dW=身幅, dS=肩幅, dL=着丈, dSl=袖丈
+   Bottoms: dW=ウエスト, dI=股下
+───────────────────────────────────────────────── */
+const TOPS_CORRECTIONS = {
+  tshirt:     { name: 'Tシャツ（半袖）',      dW: -1, dS:  0, dL: -2, dSl: 0  },
+  lont:       { name: 'ロンT',               dW:  0, dS:  0, dL:  0, dSl: 1  },
+  dress_shirt:{ name: 'シャツ（ドレス）',     dW: -1, dS:  0, dL:  0, dSl: 0  },
+  work_shirt: { name: 'シャツ（ワーク）',     dW:  1, dS:  0, dL:  0, dSl: 0  },
+  sweat:      { name: 'スウェット',           dW:  2, dS:  0, dL:  0, dSl: 0  },
+  hoodie:     { name: 'パーカー',             dW:  3, dS:  0, dL:  0, dSl: 0  },
+  light_outer:{ name: '軽アウター',           dW:  2, dS:  0, dL:  0, dSl: 0  },
+  denim_jkt:  { name: 'デニムジャケット',     dW:  2, dS:  1, dL:  0, dSl: 0  },
+  duck_jkt:   { name: 'ダックジャケット',     dW:  3, dS:  1, dL:  0, dSl: 0  },
+  leather_jkt:{ name: 'レザージャケット',     dW: -1, dS:  0, dL:  0, dSl: 0  },
+};
+
+const BOTTOMS_CORRECTIONS = {
+  denim_str:  { name: 'デニム（ストレート）', dW:  0, dI:   0 },
+  denim_wide: { name: 'デニム（ワイド）',     dW:  0, dI:   1 },
+  slacks:     { name: 'スラックス',           dW:  0, dI:  -1 },
+  cargo:      { name: 'カーゴパンツ',         dW:  0, dI:   1 },
+  military:   { name: 'ミリタリーパンツ',     dW:  0, dI:   0 },
+  sweat_pants:{ name: 'スウェットパンツ',     dW:  2, dI:   0 },
+  shorts:     { name: 'ショーツ',             dW:  0, dI: -10 },
+};
+
+/* 股上・裾の表示名マッピング */
+const RISE_LABELS = {
+  low: 'ローライズ', mid: 'ミドル',
+  high: 'ハイライズ', super_high: '深いハイライズ（ミリタリー）',
+};
+const HEM_LABELS  = { none: 'なし', light: '軽く溜める', heavy: 'しっかり溜める' };
+const HEM_POS_LABELS = {
+  ankle: 'くるぶし（短め）',
+  heel:  'かかと付近（ジャスト）',
+  shoe:  '靴に軽く乗る',
+  stack: 'しっかり溜める',
+};
+
+/* ─────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────── */
+const round = v => Math.round(v);
+
+function radio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+/* 補正タグHTML生成（可読形式） */
+function makeTag(key, val) {
+  return `<span class="correction-tag">
+    <span class="ctag-key">${key}</span>
+    <span class="ctag-val">${val}</span>
+  </span>`;
+}
+
+/* ─────────────────────────────────────────────────
+   CATEGORY SELECT
+   ⑦ 条件分岐：上着 / ボトムで表示項目を切り替え
+───────────────────────────────────────────────── */
+function selectCategory(cat) {
+  currentCategory = cat;
+  const isTops    = cat === 'tops';
+  const isBottoms = cat === 'bottoms';
+
+  // カテゴリボタン
+  document.getElementById('cat-tops').classList.toggle('active',    isTops);
+  document.getElementById('cat-bottoms').classList.toggle('active', isBottoms);
+
+  // アイテムグリッド
+  document.getElementById('tops-items').style.display    = isTops    ? '' : 'none';
+  document.getElementById('bottoms-items').style.display = isBottoms ? '' : 'none';
+
+  // Layer2: 上着専用
+  document.getElementById('size-type-field').style.display = isTops ? '' : 'none';
+  document.getElementById('length-tops').style.display     = isTops ? '' : 'none';
+
+  // Layer2: ボトム専用
+  document.getElementById('length-pants').style.display = isBottoms ? '' : 'none';
+  document.getElementById('rise-field').style.display          = isBottoms ? '' : 'none';
+  document.getElementById('wear-position-field').style.display  = isBottoms ? '' : 'none';
+  document.getElementById('hem-field').style.display            = isBottoms ? '' : 'none';
+  document.getElementById('hem-position-field').style.display   = isBottoms ? '' : 'none';
+
+  // Layer2: なで肩チェック（上着のみ）
+  document.getElementById('nade-kata-field').style.display = isTops ? '' : 'none';
+
+  // がっしり体型の説明文を切り替え
+  document.querySelector('.tops-only-text').style.display    = isTops    ? '' : 'none';
+  document.querySelector('.bottoms-only-text').style.display = isBottoms ? '' : 'none';
+
+  // Layer3
+  document.getElementById('layer3-section').style.display         = isTops    ? '' : 'none';
+  document.getElementById('layer3-bottoms-section').style.display = isBottoms ? '' : 'none';
+}
+
+/* ─────────────────────────────────────────────────
+   ACCORDION
+───────────────────────────────────────────────── */
+function toggleAcc(btn) {
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!expanded));
+  btn.nextElementSibling.classList.toggle('open', !expanded);
+}
+
+/* ─────────────────────────────────────────────────
+   DIAGNOSE — メイン診断処理
+───────────────────────────────────────────────── */
+function diagnose() {
+  const heightVal = parseFloat(document.getElementById('height').value);
+  const weightVal = parseFloat(document.getElementById('weight').value);
+  const errorEl   = document.getElementById('error-inline');
+  const resultEl  = document.getElementById('result-section');
+
+  /* バリデーション */
+  if (isNaN(heightVal) || isNaN(weightVal) ||
+      heightVal < 100   || heightVal > 250  ||
+      weightVal < 20    || weightVal > 250) {
+    errorEl.classList.add('show');
+    resultEl.classList.remove('show');
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  errorEl.classList.remove('show');
+
+  const gender     = radio('gender')     || 'male';
+  const silhouette = radio('silhouette') || 'normal';
+  const tags = [];
+
+  /* ══════════════════════════════════════════════
+     上着（TOPS）診断
+  ═══════════════════════════════════════════════ */
+  if (currentCategory === 'tops') {
+
+    const topsTypeKey = radio('tops_type') || 'tshirt';
+    const typeInfo    = TOPS_CORRECTIONS[topsTypeKey] || TOPS_CORRECTIONS.tshirt;
+
+    /* 1. ベース計算 */
+    let width    = 54 + (weightVal - 60) * 0.4;
+    width        = Math.max(width, 52);
+    let shoulder = width * 0.8 + 1;
+    let length   = 72 + (heightVal - 170) * 0.35;
+    let sleeve   = 60 + (heightVal - 170) * 0.3;
+
+    /* 2. シルエット */
+    if (silhouette === 'tight') { width -= 2; shoulder -= 1; tags.push({ key: 'タイト', val: '身幅 -2 / 肩幅 -1' }); }
+    if (silhouette === 'big')   { width += 4; shoulder += 2; length += 2; tags.push({ key: 'ビッグ', val: '身幅 +4 / 肩幅 +2 / 着丈 +2' }); }
+
+    /* 3. サイズ特性 */
+    const sizeType = radio('size_type') || 'standard';
+    if (sizeType === 'tight')  { width -= 2; shoulder -= 1; tags.push({ key: 'サイズ特性：タイト',   val: '身幅 -2 / 肩幅 -1' }); }
+    if (sizeType === 'loose')  { width += 2;                tags.push({ key: 'サイズ特性：ゆったり', val: '身幅 +2' }); }
+    if (sizeType === 'over')   { width += 4; shoulder += 2; tags.push({ key: 'サイズ特性：オーバー', val: '身幅 +4 / 肩幅 +2' }); }
+
+    /* 4. 服の種類補正 */
+    width += typeInfo.dW; shoulder += typeInfo.dS; length += typeInfo.dL; sleeve += typeInfo.dSl;
+    if (typeInfo.dW  !== 0) tags.push({ key: typeInfo.name, val: `身幅 ${typeInfo.dW  > 0 ? '+' : ''}${typeInfo.dW}` });
+    if (typeInfo.dS  !== 0) tags.push({ key: typeInfo.name, val: `肩幅 ${typeInfo.dS  > 0 ? '+' : ''}${typeInfo.dS}` });
+    if (typeInfo.dL  !== 0) tags.push({ key: typeInfo.name, val: `着丈 ${typeInfo.dL  > 0 ? '+' : ''}${typeInfo.dL}` });
+    if (typeInfo.dSl !== 0) tags.push({ key: typeInfo.name, val: `袖丈 ${typeInfo.dSl > 0 ? '+' : ''}${typeInfo.dSl}` });
+
+    /* 5. 丈感 */
+    const lt = radio('length_tops') || 'normal';
+    if (lt === 'short') { length -= 2; tags.push({ key: '丈感：短丈',  val: '着丈 -2' }); }
+    if (lt === 'long')  { length += 2; tags.push({ key: '丈感：ロング', val: '着丈 +2' }); }
+
+    /* 6. 体型 */
+    if (document.getElementById('nade-kata').checked) { shoulder -= 1; tags.push({ key: 'なで肩',     val: '肩幅 -1' }); }
+    if (document.getElementById('gassiri').checked)   { width    += 2; tags.push({ key: 'がっしり体型', val: '身幅 +2' }); }
+
+    /* 7. 性別 */
+    if (gender === 'female') { width -= 1; shoulder -= 0.5; tags.push({ key: '女性補正', val: '身幅 -1 / 肩幅 -0.5' }); }
+
+    /* 8. Layer3: 肩幅タイプ */
+    const st = radio('shoulder_type') || 'normal';
+    if (st === 'narrow') { shoulder -= 1; tags.push({ key: '肩幅タイプ：狭い', val: '肩幅 -1' }); }
+    if (st === 'wide')   { shoulder += 1; tags.push({ key: '肩幅タイプ：広い', val: '肩幅 +1' }); }
+
+    /* 9. Layer3: 腕の長さ */
+    const al = radio('arm_len') || 'normal';
+    if (al === 'short') { sleeve -= 1;   tags.push({ key: '腕の長さ：短い', val: '袖丈 -1' }); }
+    if (al === 'long')  { sleeve += 1.5; tags.push({ key: '腕の長さ：長い', val: '袖丈 +1.5' }); }
+
+    /* 10. Layer3: 胴の長さ */
+    const tl = radio('torso_len') || 'normal';
+    if (tl === 'short') { length -= 2; tags.push({ key: '胴の長さ：短胴', val: '着丈 -2' }); }
+    if (tl === 'long')  { length += 2; tags.push({ key: '胴の長さ：長胴', val: '着丈 +2' }); }
+
+    /* 11. Layer3: 着用目的 */
+    const purpose = radio('wear_purpose') || 'just';
+    if (purpose === 'loose') { width += 2;              tags.push({ key: '着用目的：ゆるめ',   val: '身幅 +2' }); }
+    if (purpose === 'over')  { width += 5; shoulder += 2; tags.push({ key: '着用目的：オーバー', val: '身幅 +5 / 肩幅 +2' }); }
+
+    /* 12. Layer3: レイヤリング */
+    const ly = radio('layering') || 'none';
+    if (ly === 'tee')   { width += 1; tags.push({ key: 'レイヤリング：Tシャツ', val: '身幅 +1' }); }
+    if (ly === 'heavy') { width += 3; tags.push({ key: 'レイヤリング：厚手',    val: '身幅 +3' }); }
+
+    /* 13. Layer3: 素材 */
+    const mat = document.getElementById('material').value;
+    if (mat === 'denim') { width += 1; tags.push({ key: '素材：デニム',  val: '身幅 +1' }); }
+    if (mat === 'duck')  { width += 2; tags.push({ key: '素材：ダック',  val: '身幅 +2' }); }
+    if (mat === 'nylon') { width -= 1; tags.push({ key: '素材：ナイロン', val: '身幅 -1' }); }
+
+    /* 14. Layer3: ジャンル */
+    const genre = radio('genre') || 'casual';
+    if (genre === 'work')    { width += 2;              tags.push({ key: 'ジャンル：ワーク',    val: '身幅 +2' }); }
+    if (genre === 'street')  { width += 1;              tags.push({ key: 'ジャンル：ストリート', val: '身幅 +1' }); }
+    if (genre === 'amekaji') { length -= 1;             tags.push({ key: 'ジャンル：アメカジ',  val: '着丈 -1' }); }
+    if (genre === 'mode')    { length += 2; width -= 1; tags.push({ key: 'ジャンル：モード',    val: '着丈 +2 / 身幅 -1' }); }
+
+    /* 15. Layer3: 好み */
+    if (document.getElementById('pref-sleeve').checked)       { sleeve += 1; tags.push({ key: '袖長め好き', val: '袖丈 +1' }); }
+    if (document.getElementById('pref-short-length').checked) { length -= 2; tags.push({ key: '短丈好き',   val: '着丈 -2' }); }
+
+    /* 16. 裄丈補正（すべての補正後に最後に実行） */
+    let yuki = sleeve + shoulder / 2;
+    if (yuki < 85) {
+      sleeve += 1.5;
+      yuki    = sleeve + shoulder / 2;
+      tags.push({ key: '裄丈自動補正', val: '袖丈 +1.5（裄丈85未満のため）' });
+    }
+
+    /* 評価 */
+    let ratingText = '◎ ベスト', ratingClass = 'rating-best';
+    if      (yuki >= 86)   { ratingText = '◎ ベスト'; ratingClass = 'rating-best'; }
+    else if (yuki >= 84.5) { ratingText = '○ 良い';   ratingClass = 'rating-good'; }
+    else                   { ratingText = '△ 注意';   ratingClass = 'rating-warn'; }
+
+    /* DOM 出力 */
+    document.getElementById('r-item-name').textContent     = typeInfo.name;
+    document.getElementById('r-item-category').textContent = '上着 / トップス';
+    document.getElementById('r-shoulder').textContent      = round(shoulder);
+    document.getElementById('r-width').textContent         = round(width);
+    document.getElementById('r-length').textContent        = round(length);
+    document.getElementById('r-sleeve').textContent        = round(sleeve);
+    document.getElementById('r-yuki').textContent          = round(yuki);
+
+    document.getElementById('r-tops-metrics').style.display  = '';
+    document.getElementById('r-pants-metrics').style.display = 'none';
+    document.getElementById('r-pants-info').style.display    = 'none';
+    document.getElementById('feedback-wrap').style.display   = 'none';
+
+    const badge = document.getElementById('r-badge');
+    badge.textContent = ratingText;
+    badge.className   = 'rating-badge ' + ratingClass;
+
+  /* ══════════════════════════════════════════════
+     ボトム（BOTTOMS）診断 — 最終完成ロジック
+     総丈 = 股下 + outerTop（アウトシーム定義）
+     ※ riseValue は使用しない
+
+     処理順:
+       ① ベース股下
+       ② シルエット
+       ③ パンツ種類
+       ④ 股上補正（inseam 微調整）
+       ⑤ 丈感
+       ⑥ 裾の溜まり
+       ⑦ 裾位置（メイン）
+       ⑧ 脚バランス
+       ⑨ 体型 / 性別
+       ⑩ outerTop 確定（学習値優先）
+       ⑪ 総丈モード逆算（最後）
+  ═══════════════════════════════════════════════ */
+  } else {
+
+    const btTypeKey = radio('bottoms_type') || 'denim_str';
+    const typeInfo  = BOTTOMS_CORRECTIONS[btTypeKey] || BOTTOMS_CORRECTIONS.denim_str;
+
+    /* ① ベース股下 */
+    let waist  = (weightVal * 0.45) + 10;
+    let inseam = (heightVal - 27) * 0.5;
+
+    const rise         = radio('rise')          || 'mid';
+    const wearPosition = radio('wear_position') || 'mid';
+
+    /* ② シルエット補正 */
+    if (silhouette === 'tight') { waist -= 2; tags.push({ key: 'タイト', val: 'ウエスト -2' }); }
+    if (silhouette === 'big')   { waist += 3; tags.push({ key: 'ビッグ', val: 'ウエスト +3' }); }
+
+    /* ③ パンツ種類補正 */
+    waist  += typeInfo.dW;
+    inseam += typeInfo.dI;
+    if (typeInfo.dW !== 0) tags.push({ key: typeInfo.name, val: `ウエスト ${typeInfo.dW > 0 ? '+' : ''}${typeInfo.dW}` });
+    if (typeInfo.dI !== 0) tags.push({ key: typeInfo.name, val: `股下 ${typeInfo.dI > 0 ? '+' : ''}${typeInfo.dI}` });
+
+    /* ④ 股上補正（inseam 微調整） */
+    if (rise === 'low')        { inseam += 1;  tags.push({ key: 'ローライズ',   val: '股下 +1' }); }
+    if (rise === 'high')       { inseam -= 1;  tags.push({ key: 'ハイライズ',   val: '股下 -1' }); }
+    if (rise === 'super_high') { inseam -= 2;  tags.push({ key: '超ハイライズ', val: '股下 -2' }); }
+    if (wearPosition === 'low')  tags.push({ key: '履き位置：低め', val: 'outerTop -1.5' });
+    if (wearPosition === 'high') tags.push({ key: '履き位置：高め', val: 'outerTop +2' });
+
+    /* ⑤ 丈感補正 */
+    const lp = radio('length_pants') || 'just';
+    if (lp === 'short') { inseam -= 1.5; tags.push({ key: '丈感：短め', val: '股下 -1.5' }); }
+    if (lp === 'long')  { inseam += 1.5; tags.push({ key: '丈感：長め', val: '股下 +1.5' }); }
+
+    /* ⑥ 裾の溜まり補正 */
+    const hem = radio('hem') || 'none';
+    if (hem === 'light') { inseam += 1.5; tags.push({ key: '裾：軽く溜める',    val: '股下 +1.5' }); }
+    if (hem === 'heavy') { inseam += 3;   tags.push({ key: '裾：しっかり溜める', val: '股下 +3' }); }
+
+    /* ⑦ 裾位置補正（メイン：体感に最も近いパラメータ） */
+    const hemPosition = radio('hem_position') || 'heel';
+    if (hemPosition === 'ankle') { inseam -= 3; tags.push({ key: '裾位置：くるぶし',       val: '股下 -3' }); }
+    if (hemPosition === 'heel')  { inseam += 1; tags.push({ key: '裾位置：かかと付近',      val: '股下 +1' }); }
+    if (hemPosition === 'shoe')  { inseam += 3; tags.push({ key: '裾位置：靴に乗る',        val: '股下 +3' }); }
+    if (hemPosition === 'stack') { inseam += 5; tags.push({ key: '裾位置：しっかり溜める',  val: '股下 +5' }); }
+
+    /* ⑧ 脚バランス補正 */
+    const legBalance = radio('leg_balance') || 'normal';
+    if (legBalance === 'short') { inseam -= 2;   tags.push({ key: '脚バランス：短め', val: '股下 -2' }); }
+    if (legBalance === 'long')  { inseam += 2.5; tags.push({ key: '脚バランス：長め', val: '股下 +2.5' }); }
+
+    /* ⑨ 体型 / 性別補正 */
+    if (document.getElementById('gassiri').checked) { waist += 2; tags.push({ key: 'がっしり体型', val: 'ウエスト +2' }); }
+    if (gender === 'female') { waist -= 2; tags.push({ key: '女性補正', val: 'ウエスト -2' }); }
+
+    /* ⑩ outerTop 確定（身長基準、学習値があれば優先） */
+    let outerTop = getOuterTop(heightVal);
+    const learnedOT = getLearnedOuterTop();
+    if (learnedOT !== null) {
+      outerTop = learnedOT;
+      tags.push({ key: '学習補正', val: `外側上部 ${outerTop.toFixed(1)}cm` });
+    }
+
+    /* ⑪ 総丈基準モード逆算（最後に適用） */
+    const mode = radio('length_mode') || 'auto';
+    if (mode === 'total') {
+      const userTotal = parseFloat(document.getElementById('user_total').value);
+      if (!isNaN(userTotal) && userTotal > 0) {
+        inseam = userTotal - outerTop;       // 総丈から股下を逆算
+        tags.push({ key: '総丈基準', val: `総丈 ${userTotal}cm → 股下逆算` });
+      }
+    }
+
+    /* 総丈を算出（アウトシーム定義: 股下 + outerTop） */
+    const totalLength = inseam + outerTop;
+
+    /* フィードバック用に保存 */
+    lastCalculatedInseam = inseam;
+
+    /* DOM 出力 */
+    document.getElementById('r-item-name').textContent     = typeInfo.name;
+    document.getElementById('r-item-category').textContent = 'ボトム / パンツ';
+    document.getElementById('r-waist').textContent         = round(waist);
+    document.getElementById('r-inseam').textContent        = round(inseam);
+    document.getElementById('r-total').textContent         = round(totalLength);
+
+    document.getElementById('r-tops-metrics').style.display  = 'none';
+    document.getElementById('r-pants-metrics').style.display = '';
+
+    /* 詳細情報（股上・裾の溜まり・裾位置） */
+    document.getElementById('r-pants-info').style.display    = '';
+    document.getElementById('r-rise-label').textContent      = RISE_LABELS[rise]            || 'ミドル';
+    document.getElementById('r-hem-label').textContent       = HEM_LABELS[hem]              || 'なし';
+    document.getElementById('r-hem-pos-label').textContent   = HEM_POS_LABELS[hemPosition]  || 'かかと付近';
+
+    /* フィードバックUI & 学習状態 */
+    document.getElementById('feedback-wrap').style.display = '';
+    updateLearnStatus();
+
+    const badge = document.getElementById('r-badge');
+    badge.textContent = '─ 参考値';
+    badge.className   = 'rating-badge rating-good';
+  }
+
+  /* 補正ログ出力 */
+  const corrList = document.getElementById('corrections-list');
+  corrList.innerHTML = tags.length === 0
+    ? '<span class="correction-tag"><span class="ctag-key">基本ロジックのみ</span></span>'
+    : tags.map(t => makeTag(t.key, t.val)).join('');
+
+  /* アニメーション表示 */
+  resultEl.classList.remove('show');
+  void resultEl.offsetWidth;
+  resultEl.classList.add('show');
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Enterキー */
+document.addEventListener('keydown', e => { if (e.key === 'Enter') diagnose(); });
+
+/* 初期化 */
+selectCategory('tops');
+updateLearnStatus();
 </script>
 
 </body>
